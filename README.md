@@ -1,7 +1,6 @@
 # chrome-ID — automated obsolete-extensions refresh
 
-Automates the daily refresh of the **obsolete-extensions** feed used by the
-Sentinel detection in `kql/browser-extensions-detection.kql`.
+Automates the daily refresh of the **obsolete-extensions** feed.
 
 The other two feeds in the KQL (`mini-ranking-stats` and the Edge list) are
 still managed manually — this automation does not touch them.
@@ -45,8 +44,6 @@ The bootstrap script handles everything in one shot:
 - registers the API key as the `CHROME_STATS_API_KEY` repo secret,
 - triggers the first workflow run so you can verify it in the Actions tab.
 
-After it finishes, the only remaining manual step is pasting the contents of
-`kql/browser-extensions-detection.kql` into your Sentinel analytics rule.
 
 ### Prerequisites the bootstrap will check for
 
