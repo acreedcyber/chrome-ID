@@ -1,0 +1,57 @@
+// Browser extensions details
+// Created by Andrew Creedon
+//
+// CHANGE: the obsolete-extensions feed is now auto-refreshed daily by the
+// GitHub Actions workflow in acreedcyber/chrome-ID. Its filename is stable
+// (data/obsolete-extensions.csv), so this query's `BadExtension` URL never
+// needs to be swapped out again.
+//
+// The other two feeds (mini-ranking-stats and edge results) are still
+// managed manually for now — their URLs are unchanged below.
+//
+// End goal: feed an analytics rule that fires when a user downloads a risky
+// extension (riskImpact == 4 OR riskLikelihood >= 3).
+//
+let ExtensionNameMap = externaldata(id:string, name:string, riskImpact:int, riskLikelihood:int)
+    [@"https://raw.githubusercontent.com/acreedcyber/chrome-ID/refs/heads/main/mini-ranking-stats-202509111.csv"]
+    with (format="csv", ignoreFirstRecord=True)
+    | extend id = tolower(trim(" ", id))
+    | project id, ExtensionName = name, riskImpact, riskLikelihood;
+//
+// AUTO-REFRESHED daily by .github/workflows/daily-refresh.yml — do not edit URL.
+// Note: ignore "Google Docs Offline" appearing as a "bad extension" — it was
+// removed from the Edge Store for licensing reasons, not anything malicious.
+let BadExtension = externaldata(id:string, name:string, obsoleteReason:string)
+    [@"https://raw.githubusercontent.com/acreedcyber/chrome-ID/refs/heads/main/data/obsolete-extensions.csv"]
+    with (format="csv", ignoreFirstRecord=True)
+    | extend id = tolower(trim(" ", id))
+    | project id, BadExtensionName = name, obsoleteReason;
+//
+let EdgeExtension = externaldata(id:string, name:string)
+    [@"https://raw.githubusercontent.com/acreedcyber/chrome-ID/refs/heads/main/edge%20results%20(1).csv"]
+    with (format="csv", ignoreFirstRecord=True)
+    | extend id = tolower(trim(" ", id))
+    | project id, EdgeExtensionName = name;
+//
+DeviceFileEvents
+//| where TimeGenerated > ago(90d)
+| where ActionType == "FileCreated" and FileName endswith ".crx"
+| extend ExtensionID = tolower(tostring(split(FileName, '_')[0]))
+| where isnotempty(ExtensionID) and strlen(ExtensionID) == 32 and ExtensionID !endswith ".crx"
+| lookup kind=leftouter ExtensionNameMap on $left.ExtensionID == $right.id
+| lookup kind=leftouter BadExtension     on $left.ExtensionID == $right.id
+| lookup kind=leftouter EdgeExtension    on $left.ExtensionID == $right.id
+| extend IsBadExtension = isnotempty(BadExtensionName)
+| extend ExtensionSource = case(
+    isnotempty(ExtensionName) and isnotempty(EdgeExtensionName), "Both",
+    isnotempty(ExtensionName), "Chrome",
+    isnotempty(EdgeExtensionName), "Edge",
+    "Unknown")
+| extend ExtensionURL     = strcat("https://chrome.google.com/webstore/detail/", ExtensionID)
+| extend EdgeExtensionURL = strcat("https://microsoftedge.microsoft.com/addons/detail/", ExtensionID)
+| extend ExtensionName    = coalesce(BadExtensionName, ExtensionName, EdgeExtensionName, "No Name Info")
+| summarize TotalInstallations = count()
+    by ExtensionName, ExtensionID, ExtensionURL, EdgeExtensionURL, obsoleteReason,
+       IsBadExtension, ExtensionSource, riskImpact, riskLikelihood,
+       TimeGenerated, InitiatingProcessAccountUpn
+| sort by TotalInstallations
