@@ -3,7 +3,7 @@
 Automates the daily refresh of the **obsolete-extensions** feed.
 
 The other two feeds in the KQL (`mini-ranking-stats` and the Edge list) are
-still managed manually — this automation does not touch them.
+still managed manually. This automation does not touch them. (yet......)
 
 ## How it works
 
@@ -26,7 +26,7 @@ Every day at 09:00 UTC, GitHub Actions runs a Python script that:
 
 ## One-command setup
 
-After you rotate your Chrome-Stats API key, open PowerShell in this folder
+After you rotate your Chrome-Stats API key within the Github Actions, open PowerShell in this folder
 and run:
 
 ```powershell
@@ -81,17 +81,3 @@ It writes to `data/obsolete-extensions.csv` relative to the repo root.
 └── README.md
 ```
 
-## Maintenance
-
-- The workflow uses `git diff --cached --quiet` before committing, so you
-  won't see no-op commits on days when Chrome-Stats publishes an identical
-  file. Real changes only.
-- The script tolerates publishing delays via a 7-day lookback. If it can't
-  find any snapshot in that window, the workflow run fails loudly and you'll
-  see it in the Actions tab.
-- Adjust the cron in `.github/workflows/daily-refresh.yml` if 09:00 UTC isn't
-  your preferred refresh window.
-- To later automate the mini-ranking-stats or Edge feeds, the endpoint pattern
-  is the same — confirm `type` and `key` from the corresponding download
-  links on `https://chrome-stats.com/chrome/raw-data` (or `/edge/raw-data`),
-  then extend `fetch_chromestats.py` with the same shape used for obsolete.
