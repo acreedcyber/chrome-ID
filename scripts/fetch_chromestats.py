@@ -17,9 +17,6 @@ Daily snapshots are published with a date stamp. If today's file isn't
 available yet (timezone lag, weekend, publishing delay), the script falls
 back through the previous LOOKBACK_DAYS days until it finds one.
 
-Environment variables:
-    CHROME_STATS_API_KEY    your Chrome-Stats premium API key (required)
-
 Output:
     data/obsolete-extensions.csv   columns: id,name,obsoleteReason
 """
@@ -36,9 +33,7 @@ from pathlib import Path
 
 import requests
 
-# --------------------------------------------------------------------------- #
 # Configuration
-# --------------------------------------------------------------------------- #
 
 API_BASE = "https://chrome-stats.com/api/chrome/download-raw-data"
 LOOKBACK_DAYS = 7        # if today's file isn't published yet, search back N days
@@ -51,9 +46,7 @@ OBSOLETE_CSV_GLOB = "*obsolete*.csv"
 # Columns we keep. Anything else in the source CSV is dropped.
 KEEP_COLUMNS = ["id", "name", "obsoleteReason"]
 
-# --------------------------------------------------------------------------- #
 # Logging
-# --------------------------------------------------------------------------- #
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,9 +55,7 @@ logging.basicConfig(
 log = logging.getLogger("fetch_chromestats")
 
 
-# --------------------------------------------------------------------------- #
 # Helpers
-# --------------------------------------------------------------------------- #
 
 def _load_local_env() -> None:
     """Load simple KEY=value pairs from a repo-local .env file, if present."""
@@ -173,9 +164,7 @@ def _remove_previous_obsolete_csvs() -> int:
     return removed
 
 
-# --------------------------------------------------------------------------- #
 # Entry point
-# --------------------------------------------------------------------------- #
 
 def main() -> int:
     _load_local_env()
