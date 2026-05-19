@@ -1,11 +1,11 @@
 name: Daily Chrome-Stats refresh
 
-# Runs every day at 09:00 UTC (~05:00 ET / ~02:00 PT). Adjust the cron if
-# you'd prefer a different window. The "workflow_dispatch" trigger lets you
+# Runs every day at 18:30 UTC, which is after noon Central year-round
+# (12:30 PM CST / 1:30 PM CDT). The "workflow_dispatch" trigger lets you
 # kick off a run manually from the Actions tab any time.
 on:
   schedule:
-    - cron: "0 9 * * *"
+    - cron: "30 18 * * *"
   workflow_dispatch:
 
 permissions:
